@@ -58,6 +58,8 @@ public class BookBus extends AppCompatActivity {
         for (int i = 0; i < 60; i++) {
             CardView cardView = createSeatCard(i + 1);
             gridLayout.addView(cardView);
+            // Check if the seat is booked and set the background color accordingly
+            checkSeatBookingStatus(cardView, i + 1);
         }
     }
 
@@ -95,75 +97,6 @@ public class BookBus extends AppCompatActivity {
                 // Handle errors if needed
             }
         });
-
-        cardView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (isSeatBooked(cardView, seatNumber)) {
-                    // Seat is already booked, display a toast message
-                    Toast.makeText(BookBus.this, "You can book only one seat at ago", Toast.LENGTH_LONG).show();
-                } else {
-                    Intent intent = getIntent();
-                    String Company=intent.getStringExtra("company");
-                    String busName = intent.getStringExtra("name");
-                    String route = intent.getStringExtra("route");
-                    String Park=intent.getStringExtra("park");
-                    String Fee=intent.getStringExtra("fee");
-                    String dateNow = getCurrentDate();
-                    String timeNow = getCurrentTime();
-
-                    AlertDialog.Builder dialog = new AlertDialog.Builder(BookBus.this);
-                    dialog.setTitle("Confirm your Booking");
-                    dialog.setMessage("Are you sure you want to continue?");
-                    dialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            isSeatSelected = false;
-
-                            // Toggle the seat selection state
-                            isSeatSelected = !isSeatSelected;
-
-                            // Update the UI based on the seat selection state
-                            updateSeatState(cardView, isSeatSelected);
-
-                            String userID=currentUser.getUid();
-
-                            BookingBusHelperClass bookingBusHelperClass = new BookingBusHelperClass(userID, userName, Company,  busName, Park, route, dateNow, timeNow, String.valueOf(seatNumber), Fee);
-
-                            String bookingKey = currentUser.getUid();
-
-                            bookingRef.child(bookingKey).setValue(bookingBusHelperClass)
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> task) {
-                                            if (task.isSuccessful()) {
-                                                Toast.makeText(BookBus.this, "Booked Seat Successfully", Toast.LENGTH_SHORT).show();
-                                                Intent payment=new Intent(BookBus.this, BookingPayment.class);
-                                                payment.putExtra("company", Company);
-                                                startActivity(payment);
-                                                finish();
-                                            } else {
-                                                Toast.makeText(BookBus.this, "Booking Failed", Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-                                    });
-                        }
-                    });
-
-                    dialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Toast.makeText(BookBus.this, "Booking Cancelled", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
-                    dialog.show();
-
-                }
-            }
-
-        });
-
 
         return cardView;
     }
@@ -208,6 +141,105 @@ public class BookBus extends AppCompatActivity {
         ColorStateList backgroundColorStateList = cardView.getCardBackgroundColor();
         int backgroundColor = backgroundColorStateList.getDefaultColor();
         return backgroundColor == getResources().getColor(R.color.red);
+    }
+
+    private void checkSeatBookingStatus(CardView cardView, int bookedSeatNumber) {
+        bookingRef.child(String.valueOf(bookedSeatNumber)).child("seatNO").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                boolean isSeatBooked = dataSnapshot.exists();
+
+                // Update the UI based on seat availability
+                updateSeatState(cardView, isSeatBooked);
+
+                // If the seat is booked, disable the onClickListener to restrict booking
+                if (isSeatBooked) {
+                    cardView.setOnClickListener(null);
+                } else {
+                    // If the seat is not booked, enable the onClickListener for booking
+                    setSeatClickListener(cardView, bookedSeatNumber);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle errors if needed
+            }
+        });
+    }
+
+    public  void  setSeatClickListener(CardView cardView, int seatNumber){
+        cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (isSeatBooked(cardView, seatNumber)) {
+                    bookingRef.child(currentUser.getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.exists()) {
+                                // Seat is already booked, display a toast message
+                                Toast.makeText(BookBus.this, "Seat is already booked", Toast.LENGTH_LONG).show();
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            // Handle errors if needed
+                        }
+                    });
+                } else {
+                    Intent intent = getIntent();
+                    String Company=intent.getStringExtra("company");
+                    String busName = intent.getStringExtra("name");
+                    String route = intent.getStringExtra("route");
+                    String Park=intent.getStringExtra("park");
+                    String Fee=intent.getStringExtra("fee");
+                    String dateNow = getCurrentDate();
+                    String timeNow = getCurrentTime();
+
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(BookBus.this);
+                    dialog.setTitle("Confirm your Booking");
+                    dialog.setMessage("Are you sure you want to continue?");
+                    dialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            // Update the UI based on the seat selection state
+                            updateSeatState(cardView, true);
+
+                            String userID = currentUser.getUid();
+
+                            BookingBusHelperClass bookingBusHelperClass = new BookingBusHelperClass(userID, userName, Company, busName, Park, route, dateNow, timeNow, String.valueOf(seatNumber), Fee);
+
+                            bookingRef.child(String.valueOf(seatNumber)).setValue(bookingBusHelperClass)
+                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                Toast.makeText(BookBus.this, "Booked Seat Successfully", Toast.LENGTH_SHORT).show();
+                                                Intent payment = new Intent(BookBus.this, BookingPayment.class);
+                                                payment.putExtra("company", Company);
+                                                payment.putExtra("seatNO", String.valueOf(seatNumber));
+                                                startActivity(payment);
+                                                finish();
+                                            } else {
+                                                Toast.makeText(BookBus.this, "Booking Failed", Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                        }
+                    });
+
+                    dialog.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            Toast.makeText(BookBus.this, "Booking Cancelled", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
+                    dialog.show();
+                }
+            }
+        });
     }
 
 }
