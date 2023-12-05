@@ -7,21 +7,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -53,18 +50,11 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.MyViewHold
         holder.fee.setText(myTicket.getFee());
         holder.date.setText(myTicket.getDate()+"  "+myTicket.getTime());
 
-        holder.pay.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Toast.makeText(context, "Pay btn clicked", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         holder.cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 AlertDialog.Builder dialog = new AlertDialog.Builder(context);
-                dialog.setTitle("Cancelling your Booking");
+                dialog.setTitle("Cancelling your Booking Ticket");
                 dialog.setMessage("Are you sure you want to cancel?");
                 dialog.setPositiveButton("YES", new DialogInterface.OnClickListener() {
                     @Override
@@ -108,7 +98,7 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.MyViewHold
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
         TextView company, name, park, route, seat, fee, date;
-        Button pay, cancel;
+        Button cancel;
 
         public MyViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -119,7 +109,6 @@ public class TicketAdapter extends RecyclerView.Adapter<TicketAdapter.MyViewHold
             seat=itemView.findViewById(R.id.seat);
             fee = itemView.findViewById(R.id.fee);
             date=itemView.findViewById(R.id.date);
-            pay=itemView.findViewById(R.id.pay);
             cancel=itemView.findViewById(R.id.cancel);
         }
     }
