@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Bus Booking</string>
+    <string name="login_title1">Welcome back!</string>
+    <string name="login_title2">Enter your credentials to continue</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="account">Create an account</string>
+    <string name="name">Bus Name</string>
+    <string name="route">Route Taken</string>
+    <string name="global">Global Coaches</string>
+    <string name="add">Add Bus</string>
+    <string name="baby">Baby Coaches</string>
+    <string name="tausi">Tausi Buses</string>
+    <string name="gateway">Gateway Buses</string>
+    <string name="companies">Registered Bus Companies</string>
+    <string name="park">Bus Park</string>
+    <string name="tel">Telephone Number</string>
+    <string name="logo">Upload Bus Logo</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
